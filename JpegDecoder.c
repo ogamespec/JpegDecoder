@@ -2,7 +2,7 @@
 
 typedef struct _JPEG_INTERFACE
 {
-    EFI_STATUS    (*jpeg_sub1) (void);            // decoder?
+    EFI_STATUS    (*Decode) (void);            // decoder?
 
     EFI_STATUS    (*NextChunk) (
         EFI_SYSTEM_TABLE * SystemTable, 
@@ -40,7 +40,7 @@ EfiApplicationEntryPoint (
 
     gInterfaceHandler = NULL;
 
-    JpegInterface.jpeg_sub1 = JpegSub1;
+    JpegInterface.jpeg_sub1 = JpegDecode;
     JpegInterface.NextChunk = JpegNextChunk;
 
     JpegTag = 'DgpJ';

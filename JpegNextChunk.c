@@ -28,20 +28,22 @@ EFI_STATUS JpegNextChunk (
     if (ChunkSize == NULL) return EFI_INVALID_PARAMETER;
 
     //
-    // Try to find next Jpeg chunk.
+    // Try to find next Jpeg chunk (Sync on frame)
     //
 
-    for ( JpegDataStart ; JpegDataStart < JpegDataEnd ; JpegDataStart++ )
+    for ( JpegDataStart ; JpegDataStart < JpegDataEnd ; )
     {
-        if ( JpegDataStart[0] != 0xff ) continue;       // First byte should be 0xFF
+        if ( JpegDataStart[0] != 0xff || JpegDataStart[1] == 0)     // First byte should be 0xFF
+        {                                                       // Seconds byte shouldn't be zero (chunk type)
+            JpegDataStart++;
+            continue;       
+        }
 
-        if ( JpegDataStart[1] == 0 ) continue;          // Seconds byte shouldn't be zero (chunk type)
-
-        if ( JpegDataStart[2] != 0xFF )         // Found not SOF chunk (this is actually bogus check, better test with 0xd8 )
+        if ( JpegDataStart[2] != 0xFF )         // Found not SOI chunk (this is actually bogus check, better test with 0xd8 )
         {
             *ChunkSize = (JpegDataStart[2] << 8) + JpegDataStart[3] + 2;    // Get chunk size + 2 bytes for marker
         }
-        else *ChunkSize = 2;       // SOF chunk found (size = 2 bytes, SOF marker only)
+        else *ChunkSize = 2;       // SOI chunk found (size = 2 bytes, SOI marker only)
 
         //
         // Found some chunk
@@ -60,7 +62,7 @@ EFI_STATUS JpegNextChunk (
             return EFI_SUCCESS;
         }
 
-        JpegDataStart += *ChunkSize - 1;       // Require additional decrement before next iteration
+        JpegDataStart += *ChunkSize;
     }
 
     //
